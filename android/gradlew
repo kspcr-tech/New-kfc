@@ -1,2 +1,12 @@
 #!/usr/bin/env sh
-java -jar "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" "$@"
+
+##############################################################################
+## Gradle wrapper script for UNIX
+##############################################################################
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+JAVA_EXEC="java"
+CLASSPATH="$DIR/gradle/wrapper/gradle-wrapper.jar"
+
+exec "$JAVA_EXEC" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
