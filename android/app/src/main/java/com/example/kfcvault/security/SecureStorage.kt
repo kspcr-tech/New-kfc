@@ -22,13 +22,15 @@ class SecureStorage(context: Context) {
         prefs.edit().putString("card_number", card).apply()
     }
 
-    fun getCardNumber(): String =
-        prefs.getString("card_number", "") ?: ""
+    fun getCardNumber(): String {
+        return prefs.getString("card_number", "") ?: ""
+    }
 
     fun saveBalance(balance: String) {
         prefs.edit().putString("balance", balance).apply()
     }
 
-    fun getBalance(): String =
-        prefs.getString("balance", "Not fetched")
+    fun getBalance(): String {
+        return prefs.getString("balance", "Not fetched") ?: "Not fetched"
+    }
 }
