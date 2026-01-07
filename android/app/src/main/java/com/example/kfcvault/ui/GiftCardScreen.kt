@@ -110,11 +110,11 @@ fun GiftCardScreen() {
                     )
                     statusMessage = "Please allow SMS permission"
                 } else {
-                    val fetched = SmsBalanceReader.fetchLatestKfcBalance(context)
-                    if (fetched != null) {
-                        balance = fetched
-                        storage.saveBalance(fetched)
-                        statusMessage = "Balance fetched successfully"
+                    val result = SmsBalanceReader.fetchLatestKfcBalance(context)
+if (result != null) {
+    balance = result.balance
+    storage.saveBalance(result.balance)
+    statusMessage = "Expiry: ${result.expiry}"
                     } else {
                         statusMessage = "No KFC balance SMS found"
                     }
