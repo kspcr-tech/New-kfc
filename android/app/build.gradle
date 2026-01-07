@@ -1,18 +1,24 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    id "com.android.application" version "8.2.2"
+    id "org.jetbrains.kotlin.android" version "1.9.20"
 }
 
 android {
-    namespace 'com.example.kfcvault'
+    namespace "com.example.kfcvault"
     compileSdk 34
 
     defaultConfig {
         applicationId "com.example.kfcvault"
-        minSdk 24
+        minSdk 23
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "5.0"
+    }
+
+    // 🔴 FIX: Align Java bytecode to JDK 17
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -20,18 +26,19 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion '1.5.4'
-    }
-
-    kotlinOptions {
-        jvmTarget = '17'
+        kotlinCompilerExtensionVersion "1.5.4"
     }
 }
 
+// 🔴 FIX: Align Kotlin compiler to JVM 17
+kotlin {
+    jvmToolchain(17)
+}
+
 dependencies {
-    implementation "androidx.core:core-ktx:1.12.0"
     implementation "androidx.activity:activity-compose:1.8.2"
     implementation "androidx.compose.ui:ui:1.6.1"
+    implementation "androidx.compose.ui:ui-tooling-preview:1.6.1"
     implementation "androidx.compose.material3:material3:1.2.0"
-    implementation "androidx.compose.material:material-icons-extended:1.6.1"
+    debugImplementation "androidx.compose.ui:ui-tooling:1.6.1"
 }
