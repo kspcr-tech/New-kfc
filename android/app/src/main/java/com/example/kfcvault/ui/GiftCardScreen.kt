@@ -2,13 +2,13 @@ package com.example.kfcvault.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,7 +16,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.activity.ComponentActivity
 import com.example.kfcvault.security.SecureStorage
 import com.example.kfcvault.sms.SmsBalanceReader
 
@@ -27,46 +26,53 @@ fun GiftCardScreen() {
     val activity = context as ComponentActivity
     val storage = remember { SecureStorage(context) }
 
-    var isVisible by remember { mutableStateOf(false) }
-    var giftCardNumber by remember {
-        mutableStateOf(
-            storage.getCardNumber().ifEmpty { "1234 5678 9012 3456" }
-        )
-    }
+    var cardNumber by remember { mutableStateOf(storage.getCardNumber()) }
+    var cardPin by remember { mutableStateOf("") }
+    var showPin by remember { mutableStateOf(false) }
     var balance by remember { mutableStateOf(storage.getBalance()) }
+    var statusMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Top
     ) {
 
         Text(
-            text = "KFC Vault – Phase 1b",
-            style = MaterialTheme.typography.titleLarge
+            text = "KFC Gift Card Vault",
+            style = MaterialTheme.typography.headlineSmall
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        /** Gift Card Number **/
         OutlinedTextField(
-            value = giftCardNumber,
-            onValueChange = {},
-            readOnly = true,
+            value = cardNumber,
+            onValueChange = { cardNumber = it },
             label = { Text("Gift Card Number") },
-            visualTransformation = if (isVisible)
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        /** Gift Card PIN **/
+        OutlinedTextField(
+            value = cardPin,
+            onValueChange = { cardPin = it },
+            label = { Text("Gift Card PIN") },
+            visualTransformation = if (showPin)
                 VisualTransformation.None
             else
                 PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { isVisible = !isVisible }) {
+                IconButton(onClick = { showPin = !showPin }) {
                     Icon(
-                        imageVector = if (isVisible)
+                        imageVector = if (showPin)
                             Icons.Filled.Visibility
                         else
                             Icons.Filled.VisibilityOff,
-                        contentDescription = "Toggle visibility"
+                        contentDescription = "Toggle PIN visibility"
                     )
                 }
             },
@@ -75,22 +81,23 @@ fun GiftCardScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        /** Save Button **/
         Button(
             onClick = {
-                // Save card securely (Phase 1b-A)
-                storage.saveCardNumber(giftCardNumber)
+                storage.saveCardNumber(cardNumber)
+                statusMessage = "Gift card saved securely"
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save Card Securely")
+            Text("Save Gift Card")
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        /** Fetch Balance **/
         Button(
             onClick = {
 
-                // Runtime SMS permission check
                 if (ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.READ_SMS
@@ -99,8 +106,42 @@ fun GiftCardScreen() {
                     ActivityCompat.requestPermissions(
                         activity,
                         arrayOf(Manifest.permission.READ_SMS),
-                        1001
+                        2001
                     )
+                    statusMessage = "Please allow SMS permission"
+                } else {
+                    val fetched = SmsBalanceReader.fetchLatestKfcBalance(context)
+                    if (fetched != null) {
+                        balance = fetched
+                        storage.saveBalance(fetched)
+                        statusMessage = "Balance fetched successfully"
+                    } else {
+                        statusMessage = "No KFC balance SMS found"
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Fetch Balance from SMS")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        /** Balance Display **/
+        Text(
+            text = "Balance: $balance",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        if (statusMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = statusMessage,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}                    )
                 } else {
                     // Fetch balance from SMS (Phase 1b-B)
                     val fetched = SmsBalanceReader.fetchLatestKfcBalance(context)
