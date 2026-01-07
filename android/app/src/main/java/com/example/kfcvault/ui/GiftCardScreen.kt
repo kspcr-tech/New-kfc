@@ -29,7 +29,9 @@ fun GiftCardScreen() {
     var cardNumber by remember { mutableStateOf(storage.getCardNumber()) }
     var cardPin by remember { mutableStateOf("") }
     var showPin by remember { mutableStateOf(false) }
+
     var balance by remember { mutableStateOf(storage.getBalance()) }
+    var expiry by remember { mutableStateOf("") }
     var statusMessage by remember { mutableStateOf("") }
 
     Column(
@@ -46,7 +48,7 @@ fun GiftCardScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        /** Gift Card Number **/
+        /* Gift Card Number */
         OutlinedTextField(
             value = cardNumber,
             onValueChange = { cardNumber = it },
@@ -56,7 +58,7 @@ fun GiftCardScreen() {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        /** Gift Card PIN **/
+        /* Gift Card PIN */
         OutlinedTextField(
             value = cardPin,
             onValueChange = { cardPin = it },
@@ -81,7 +83,7 @@ fun GiftCardScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        /** Save Button **/
+        /* Save Gift Card */
         Button(
             onClick = {
                 storage.saveCardNumber(cardNumber)
@@ -94,10 +96,9 @@ fun GiftCardScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        /** Fetch Balance **/
+        /* Fetch Balance from SMS */
         Button(
             onClick = {
-
                 if (ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.READ_SMS
@@ -111,12 +112,13 @@ fun GiftCardScreen() {
                     statusMessage = "Please allow SMS permission"
                 } else {
                     val result = SmsBalanceReader.fetchLatestKfcBalance(context)
-if (result != null) {
-    balance = result.balance
-    storage.saveBalance(result.balance)
-    statusMessage = "Expiry: ${result.expiry}"
+                    if (result != null) {
+                        balance = result.balance
+                        expiry = result.expiry
+                        storage.saveBalance(result.balance)
+                        statusMessage = "Balance fetched successfully"
                     } else {
-                        statusMessage = "No KFC balance SMS found"
+                        statusMessage = "No reply SMS from 55757575 found"
                     }
                 }
             },
@@ -127,11 +129,18 @@ if (result != null) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        /** Balance Display **/
         Text(
             text = "Balance: $balance",
             style = MaterialTheme.typography.bodyLarge
         )
+
+        if (expiry.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Expiry: $expiry",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         if (statusMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -140,29 +149,5 @@ if (result != null) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
-    }
-}                    )
-                } else {
-                    // Fetch balance from SMS (Phase 1b-B)
-                    val fetched = SmsBalanceReader.fetchLatestKfcBalance(context)
-                    if (fetched != null) {
-                        balance = fetched
-                        storage.saveBalance(fetched)
-                    } else {
-                        balance = "No KFC balance SMS found"
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Fetch Balance from SMS")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Balance: $balance",
-            style = MaterialTheme.typography.bodyLarge
-        )
     }
 }
